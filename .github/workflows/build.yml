@@ -64,16 +64,20 @@ jobs:
     runs-on: ubuntu-22.04
     if: needs.check_version.outputs.ALREADY_RELEASE == '0'
 
-    steps:
-      - uses: actions/create-release@master
-        id: createRelease
-        name: Create Runner Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Runner Release
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: "${{ needs.check_version.outputs.FRIDA_VERSION }}"
-          release_name: "${{ needs.check_version.outputs.FRIDA_VERSION }}"
+          name: "${{ needs.check_version.outputs.FRIDA_VERSION }}"
           prerelease: false
+          files: |
+            **/frida-server
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   android_build:
     runs-on: ubuntu-22.04
