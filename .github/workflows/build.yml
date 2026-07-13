@@ -131,29 +131,24 @@ jobs:
         cd Florida
         git checkout 17.13.0
         ls
-        echo "Looking for patch directories:"
-        ls frida-core 2>/dev/null && PATCH_DIR=.
-        ls 17.13.0/frida-core 2>/dev/null && PATCH_DIR="17.13.0"
-        echo "Using PATCH_DIR=$PATCH_DIR"
+        echo "Patch list:"
+        ls Florida/patches
         cd ..
 
         # 3. 应用补丁（此时 Florida/patches 一定是 17.13.0 专用）
         echo "Applying Florida patches..."
         cd frida
-        for proj in frida-core frida-gum; do
-          echo "Patching $proj"
-          if [ -d "subprojects/$proj" ]; then
-            cd subprojects/$proj
-            if [ "$PATCH_DIR" = "17.13.0" ]; then
-              git apply ../../Florida/17.13.0/$proj/*.patch
-            else
-              git apply ../../Florida/$proj/*.patch
-            fi
-            cd ../..
-          else
-            echo "subprojects/$proj not found, skipping"
-          fi
-        done
+        echo "Patching frida-core"
+        cd subprojects/frida-core
+        git apply ../../Florida/patches/*.patch
+        cd ../..
+
+        # frida-gum
+        echo "Patching frida-gum"
+        cd subprojects/frida-gum
+        git apply ../../Florida/patches/*.patch
+        cd ../..
+        
         cd ..
 
         # 4. 编译
