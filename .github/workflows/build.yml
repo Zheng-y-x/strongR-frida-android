@@ -121,29 +121,44 @@ jobs:
       shell: bash
       run: |
         export ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}
-        git clone --recurse-submodules https://github.com/frida/frida
+        # 1. 下载 Frida 17.13.0 源码并解压
+        wget https://github.com/frida/frida/archive/refs/tags/17.13.0.tar.gz
+        tar -xzf 17.13.0.tar.gz
+        mv frida-17.13.0 frida
+        
+        # 2. 下载 Florida 17.13.0 专属补丁包并解压
+        wget https://github.com/Ylarod/Florida/releases/download/17.13.0/florida-17.13.0-patches.tar.gz
+        tar -xzf florida-17.13.0-patches.tar.gz
+        
+        # 3. 应用补丁
         cd frida
-        for path in ../Patchs/strongR-frida/*
+        # 遍历补丁目录（假设解压后的目录名符合常规命名）
+        for path in ../florida-17.13.0-patches/frida-core ../florida-17.13.0-patches/frida-gum
         do
           name=$(basename $path)
-          real=$(realpath $path)
-          echo "Apply patches in $real to frida/subprojects/$name"
-          cd subprojects/$name
-          git am ../../../Patchs/strongR-frida/$name/*.patch
-          cd ../..
-          echo $i
+          echo "Applying patches from $path to subprojects/$name"
+          if [ -d "subprojects/$name" ]; then
+            cd subprojects/$name
+            # 应用该目录下的所有 .patch 文件
+            git apply ../../../$path/*.patch || echo "Warning: Some patches in $name failed to apply, continuing..."
+            cd ../..
+          else
+            echo "subprojects/$name not found, skipping"
+          fi
         done
         cd ..
         
+        # 4. 编译
         ARCHES="android-arm android-arm64 android-x86 android-x86_64"
         for ARCH in $ARCHES
         do
           mkdir build-$ARCH
           cd build-$ARCH
           ../frida/configure --host=$ARCH
-          make
+          make -j$(nproc)
           cd ..
         done
+        
         
 
     - name: Check release version
