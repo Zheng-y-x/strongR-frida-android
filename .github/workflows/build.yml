@@ -123,12 +123,23 @@ jobs:
       run: |
         set -e
 
-        # ✅ 写死
-        export ANDROID_NDK_ROOT="/home/runner/.setup-ndk-clang/r29/r563880c"
-        echo "CLANG_PATH=${{ steps.setup-ndk.outputs.clang-path }}"
-        echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
+        # === 安装官方 Android NDK r29 ===
+        NDK_VERSION="r29"
+        NDK_ZIP="android-ndk-${NDK_VERSION}-linux-x86_64.zip"
+        NDK_URL="https://dl.google.com/android/repository/${NDK_ZIP}"
+        NDK_DIR="$HOME/android-ndk"
 
-        ls "$ANDROID_NDK_ROOT"
+        echo "Downloading NDK ${NDK_VERSION}..."
+        mkdir -p "$NDK_DIR"
+        wget -q --show-progress "$NDK_URL" -O "/tmp/$NDK_ZIP"
+        unzip -q "/tmp/$NDK_ZIP" -d "$NDK_DIR"
+        rm "/tmp/$NDK_ZIP"
+
+        export ANDROID_NDK_ROOT="$NDK_DIR/android-ndk-${NDK_VERSION}"
+        echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT" >> $GITHUB_ENV
+
+        echo "NDK installed at: $ANDROID_NDK_ROOT"
+        ls "$ANDROID_NDK_ROOT/build/cmake || echo 'NDK structure OK'"
         
         # 1. 克隆 Frida 17.13.0（必须带子模块）
         echo "Cloning Frida 17.13.0..."
