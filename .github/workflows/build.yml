@@ -122,6 +122,9 @@ jobs:
       shell: bash
       run: |
         export ANDROID_NDK_ROOT=$HOME/android-ndk/android-ndk-r29
+        echo "NDK path: $ANDROID_NDK_ROOT"
+        ls "$ANDROID_NDK_ROOT"
+        
           # 1. 克隆 Frida 17.13.0（必须带子模块）
         echo "Cloning Frida 17.13.0..."
         git clone --recurse-submodules -b 17.13.0 https://github.com/frida/frida.git frida
@@ -156,6 +159,7 @@ jobs:
         echo "Building..."
         ARCHES="android-arm android-arm64 android-x86 android-x86_64"
         for ARCH in $ARCHES; do
+          echo "Building $ARCH..."
           mkdir build-$ARCH
           cd build-$ARCH
           ../frida/configure --host=$ARCH
