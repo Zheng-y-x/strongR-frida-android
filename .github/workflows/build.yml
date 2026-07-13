@@ -101,7 +101,7 @@ jobs:
         java-version: "17"
 
     - name: Setup NDK
-      uses: nttld/setup-ndk@v1
+      uses: Ylarod/setup-ndk-clang@v1
       with:
         ndk-version: r29
         add-to-path: false
