@@ -130,13 +130,13 @@ jobs:
         git clone https://github.com/Ylarod/Florida.git Florida
         cd Florida
         git checkout 17.13.0
-        ls
-        echo "Patch list:"
-        ls patches/frida-core
-        ls patches/frida-gum
         cd ..
+        
+        # 3.1 删除会导致 rpc.vala 编译失败的 patch
+        echo "Removing conflicting rpc patch..."
+        rm -f Florida/patches/frida-core/0001-Florida-string_frida_rpc.patch
 
-        # 3. 应用补丁（此时 Florida/patches 一定是 17.13.0 专用）
+        # 3.2 应用补丁（此时 Florida/patches 一定是 17.13.0 专用）
         echo "Applying Florida patches..."
         cd frida
         echo "Patching frida-core"
