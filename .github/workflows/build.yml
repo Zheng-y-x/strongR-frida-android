@@ -124,8 +124,7 @@ jobs:
         set -e
 
         # ✅ 从 clang-path 反推 ANDROID_NDK_ROOT
-        export ANDROID_NDK_ROOT="$(dirname "$(dirname "$(dirname "$(dirname "${{ steps.setup-ndk.outputs.clang-path }}")")")")"
-
+        export ANDROID_NDK_ROOT="$(dirname "${{ steps.setup-ndk.outputs.clang-path }}")"
         echo "CLANG_PATH=${{ steps.setup-ndk.outputs.clang-path }}"
         echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
 
