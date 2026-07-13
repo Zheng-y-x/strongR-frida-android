@@ -125,7 +125,7 @@ jobs:
 
         # === 安装官方 Android NDK r29 ===
         NDK_VERSION="r29"
-        NDK_ZIP="android-ndk-${NDK_VERSION}-linux-x86_64.zip"
+        NDK_ZIP="android-ndk-${NDK_VERSION}-linux.zip"
         NDK_URL="https://dl.google.com/android/repository/${NDK_ZIP}"
         NDK_DIR="$HOME/android-ndk"
 
