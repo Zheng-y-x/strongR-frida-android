@@ -132,7 +132,8 @@ jobs:
         git checkout 17.13.0
         ls
         echo "Patch list:"
-        ls patches
+        ls patches/frida-core
+        ls patches/frida-gum
         cd ..
 
         # 3. 应用补丁（此时 Florida/patches 一定是 17.13.0 专用）
@@ -140,13 +141,12 @@ jobs:
         cd frida
         echo "Patching frida-core"
         cd subprojects/frida-core
-        git apply ../../Florida/patches/*.patch
+        git apply ../../../Florida/patches/frida-core/*.patch
         cd ../..
 
-        # frida-gum
         echo "Patching frida-gum"
         cd subprojects/frida-gum
-        git apply ../../Florida/patches/*.patch
+        git apply ../../../Florida/patches/frida-gum/*.patch
         cd ../..
         
         cd ..
