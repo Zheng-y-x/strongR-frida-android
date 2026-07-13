@@ -121,11 +121,24 @@ jobs:
     - name: build frida for Android
       shell: bash
       run: |
-        export ANDROID_NDK_ROOT=$HOME/android-ndk/android-ndk-r29
-        echo "NDK path: $ANDROID_NDK_ROOT"
+        set -e
+
+        echo "=== Installing Android NDK r29 ==="
+        NDK_VERSION="r29"
+        NDK_ZIP="android-ndk-${NDK_VERSION}-linux-x86_64.zip"
+        NDK_URL="https://dl.google.com/android/repository/${NDK_ZIP}"
+        NDK_DIR="$HOME/android-ndk"
+
+        mkdir -p "$NDK_DIR"
+        wget -q --show-progress "$NDK_URL" -O "/tmp/$NDK_ZIP"
+        unzip -q "/tmp/$NDK_ZIP" -d "$NDK_DIR"
+        rm "/tmp/$NDK_ZIP"
+
+        export ANDROID_NDK_ROOT="$NDK_DIR/android-ndk-${NDK_VERSION}"
+        echo "NDK installed at: $ANDROID_NDK_ROOT"
         ls "$ANDROID_NDK_ROOT"
         
-          # 1. 克隆 Frida 17.13.0（必须带子模块）
+        # 1. 克隆 Frida 17.13.0（必须带子模块）
         echo "Cloning Frida 17.13.0..."
         git clone --recurse-submodules -b 17.13.0 https://github.com/frida/frida.git frida
 
