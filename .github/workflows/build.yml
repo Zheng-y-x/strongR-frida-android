@@ -132,7 +132,7 @@ jobs:
         git checkout 17.13.0
         ls
         echo "Patch list:"
-        ls Florida/patches
+        ls patches
         cd ..
 
         # 3. 应用补丁（此时 Florida/patches 一定是 17.13.0 专用）
