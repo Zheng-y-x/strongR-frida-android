@@ -139,7 +139,7 @@ jobs:
         echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT" >> $GITHUB_ENV
 
         echo "NDK installed at: $ANDROID_NDK_ROOT"
-        ls "$ANDROID_NDK_ROOT/build/cmake || echo 'NDK structure OK'"
+        ls "$ANDROID_NDK_ROOT/build/cmake"
         
         # 1. 克隆 Frida 17.13.0（必须带子模块）
         echo "Cloning Frida 17.13.0..."
