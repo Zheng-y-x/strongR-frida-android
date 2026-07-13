@@ -121,37 +121,36 @@ jobs:
       shell: bash
       run: |
         export ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}
-        # 1. 下载 Frida 17.13.0 源码并解压
-        wget https://github.com/frida/frida/archive/refs/tags/17.13.0.tar.gz
-        tar -xzf 17.13.0.tar.gz
-        mv frida-17.13.0 frida
-        
-        # 2. 下载 Florida 17.13.0 专属补丁包并解压
-        wget https://github.com/Ylarod/Florida/releases/download/17.13.0/florida-17.13.0-patches.tar.gz
-        tar -xzf florida-17.13.0-patches.tar.gz
-        
-        # 3. 应用补丁
+          # 1. 克隆 Frida 17.13.0（必须带子模块）
+        echo "Cloning Frida 17.13.0..."
+        git clone --recurse-submodules -b 17.13.0 https://github.com/frida/frida.git frida
+
+        # 2. 克隆 Florida 并切换到 17.13.0 标签
+        echo "Cloning Florida and checking out 17.13.0..."
+        git clone https://github.com/Ylarod/Florida.git Florida
+        cd Florida
+        git checkout 17.13.0
+        cd ..
+
+        # 3. 应用补丁（此时 Florida/patches 一定是 17.13.0 专用）
+        echo "Applying Florida patches..."
         cd frida
-        # 遍历补丁目录（假设解压后的目录名符合常规命名）
-        for path in ../florida-17.13.0-patches/frida-core ../florida-17.13.0-patches/frida-gum
-        do
-          name=$(basename $path)
-          echo "Applying patches from $path to subprojects/$name"
-          if [ -d "subprojects/$name" ]; then
-            cd subprojects/$name
-            # 应用该目录下的所有 .patch 文件
-            git apply ../../../$path/*.patch || echo "Warning: Some patches in $name failed to apply, continuing..."
+        for proj in frida-core frida-gum; do
+          echo "Patching $proj"
+          if [ -d "subprojects/$proj" ]; then
+            cd subprojects/$proj
+            git apply ../../Florida/patches/$proj/*.patch
             cd ../..
           else
-            echo "subprojects/$name not found, skipping"
+            echo "subprojects/$proj not found, skipping"
           fi
         done
         cd ..
-        
+
         # 4. 编译
+        echo "Building..."
         ARCHES="android-arm android-arm64 android-x86 android-x86_64"
-        for ARCH in $ARCHES
-        do
+        for ARCH in $ARCHES; do
           mkdir build-$ARCH
           cd build-$ARCH
           ../frida/configure --host=$ARCH
