@@ -33,6 +33,17 @@ jobs:
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
+            // ===== 调试输出：打印实际传给 API 的变量 =====
+            const releaseVersion = '${{ steps.pullFridaLatestRelease.outputs.FRIDA_VERSION }}'
+            const owner = '${{ secrets.GIT_OWNER }}'
+            const repo = '${{ secrets.GIT_REPO }}'
+
+            core.notice(`[DEBUG] releaseVersion = "${releaseVersion}"`)
+            core.notice(`[DEBUG] owner (GIT_OWNER) = "${owner}"`)
+            core.notice(`[DEBUG] repo (GIT_REPO) = "${repo}"`)
+            core.notice(`[DEBUG] current repo (context) = "${context.repo.owner}/${context.repo.repo}"`)
+            core.notice(`[DEBUG] token type = ${{ secrets.GITHUB_TOKEN && 'GITHUB_TOKEN' || 'NONE' }}`)
+            
             try {
               const releaseVersion = '${{ steps.pullFridaLatestRelease.outputs.FRIDA_VERSION }}'
               const releaseResponse = await github.rest.repos.getReleaseByTag({
@@ -50,10 +61,15 @@ jobs:
                   core.setOutput('ALREADY_RELEASE', '0');
               }
             } catch (e) {
-              if(e.message == 'Not Found'){
-                core.setOutput('ALREADY_RELEASE', '0');
+              // ===== 404 或异常时，把完整信息打出来 =====
+              core.notice(`[DEBUG] ERROR status = ${e.status ?? 'N/A'}`)
+              core.notice(`[DEBUG] ERROR message = ${e.message}`)
+              if (e.response && e.response.url) {
+                core.notice(`[DEBUG] Request URL = ${e.response.url}`)
               }
-              else{
+              if (e.status === 404 || (e.message && e.message.includes('Not Found'))) {
+                core.setOutput('ALREADY_RELEASE', '0');
+              } else {
                 core.setFailed(e.message);
               }
             }
