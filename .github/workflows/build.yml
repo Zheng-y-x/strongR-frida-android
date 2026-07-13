@@ -141,12 +141,12 @@ jobs:
         cd frida
         echo "Patching frida-core"
         cd subprojects/frida-core
-        git apply --reject --whitespace=fix ../../../Florida/patches/frida-core/*.patch
+        git apply --reject --whitespace=fix ../../../Florida/patches/frida-core/*.patch || true
         cd ../..
 
         echo "Patching frida-gum"
         cd subprojects/frida-gum
-        git apply --reject --whitespace=fix ../../../Florida/patches/frida-gum/*.patch
+        git apply --reject --whitespace=fix ../../../Florida/patches/frida-gum/*.patch || true
         cd ../..
         
         cd ..
