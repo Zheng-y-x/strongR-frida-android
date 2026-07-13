@@ -104,7 +104,7 @@ jobs:
       uses: Ylarod/setup-ndk-clang@v1
       with:
         ndk-version: r29
-        add-to-path: false
+        add-to-path: true
       id: setup-ndk
     
     - name: Set up Python 3.9
@@ -123,19 +123,12 @@ jobs:
       run: |
         set -e
 
-        echo "=== Installing Android NDK r29 ==="
-        NDK_VERSION="r29"
-        NDK_ZIP="android-ndk-${NDK_VERSION}-linux-x86_64.zip"
-        NDK_URL="https://dl.google.com/android/repository/${NDK_ZIP}"
-        NDK_DIR="$HOME/android-ndk"
+        # ✅ 从 clang-path 反推 ANDROID_NDK_ROOT
+        export ANDROID_NDK_ROOT="$(dirname "$(dirname "$(dirname "$(dirname "${{ steps.setup-ndk.outputs.clang-path }}")")")")"
 
-        mkdir -p "$NDK_DIR"
-        wget -q --show-progress "$NDK_URL" -O "/tmp/$NDK_ZIP"
-        unzip -q "/tmp/$NDK_ZIP" -d "$NDK_DIR"
-        rm "/tmp/$NDK_ZIP"
+        echo "CLANG_PATH=${{ steps.setup-ndk.outputs.clang-path }}"
+        echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
 
-        export ANDROID_NDK_ROOT="$NDK_DIR/android-ndk-${NDK_VERSION}"
-        echo "NDK installed at: $ANDROID_NDK_ROOT"
         ls "$ANDROID_NDK_ROOT"
         
         # 1. 克隆 Frida 17.13.0（必须带子模块）
