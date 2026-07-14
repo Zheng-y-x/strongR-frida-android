@@ -1,7 +1,7 @@
 diff --git a/frida-core/lib/base/rpc.vala b/frida-core/lib/base/rpc.vala
 index abcdef1..1234567 100644
---- a/frida-core/lib/base/rpc.vala
-+++ b/frida-core/lib/base/rpc.vala
+--- a/subprojects/frida-core/lib/base/rpc.vala
++++ b/subprojects/frida-core/lib/base/rpc.vala
 @@ -21,6 +21,10 @@ public class RpcClient : Object {
  	public RpcClient (RpcPeer peer) {
  		Object (peer: peer);
