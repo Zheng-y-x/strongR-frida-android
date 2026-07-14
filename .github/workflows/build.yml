@@ -222,7 +222,13 @@ jobs:
           make -j$(nproc)
           cd ..
         done
-        
+
+        echo "=== Checking agent.so symbols ==="
+        AGENT="build-android-arm64/subprojects/frida-agent/libfrida-agent.so"
+
+        file "$AGENT"
+        nm -D "$AGENT" | grep -E 'main|frida_agent_main'
+        readelf -Ws "$AGENT" | grep -E 'main|frida_agent_main' | head -20
         
 
     - name: Check release version
@@ -394,28 +400,6 @@ jobs:
       with:
         name: frida-agent-debug
         path: |
-          frida/build/src/frida-agent/**/libfrida-agent.so
+          build-android-arm64/subprojects/frida-agent/libfrida-agent.so
         retention-days: 7
 
-    - name: Debug - Find and inspect libfrida-agent.so
-      run: |
-        set -e
-        echo "===== Searching for libfrida-agent.so ====="
-        AGENTS=$(find frida/build -name "libfrida-agent.so" -type f)
-
-        if [ -z "$AGENTS" ]; then
-          echo "ERROR: libfrida-agent.so not found!"
-          echo "Listing frida/build for debugging:"
-          ls -R frida/build | head -50
-          exit 1
-        fi
-
-        echo "$AGENTS" | while read -r AGENT; do
-          echo ""
-          echo "=== Agent: $AGENT ==="
-          file "$AGENT"
-          echo "--- Dynamic symbols (main / frida_agent_main) ---"
-          nm -D "$AGENT" | grep -E 'main|frida_agent_main' || echo "NO main/frida_agent_main in .dynsym"
-          echo "--- ELF symbol table (first 20) ---"
-          readelf -Ws "$AGENT" | grep -E 'main|frida_agent_main' | head -20
-        done
