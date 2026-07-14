@@ -167,6 +167,26 @@ jobs:
         cd Florida
         git checkout 17.13.0
         cd ..
+
+        # 2.2 检查 Frida 版本信息
+        echo "===== Frida Version Info ====="
+        cd frida
+        echo "Frida Branch/HEAD: $(git rev-parse --abbrev-ref HEAD)"
+        echo "Frida Exact Tag: $(git describe --tags --exact-match 2>/dev/null || echo 'NOT ON A TAG')"
+        echo "Frida Commit: $(git rev-parse HEAD)"
+        echo "Frida Submodule Status:"
+        git submodule status
+        cd ..
+
+        # 2.3 检查 Florida 版本信息
+        echo "===== Florida Version Info ====="
+        cd Florida
+        echo "Florida Branch/HEAD: $(git rev-parse --abbrev-ref HEAD)"
+        echo "Florida Exact Tag: $(git describe --tags --exact-match 2>/dev/null || echo 'NOT ON A TAG')"
+        echo "Florida Commit: $(git rev-parse HEAD)"
+        echo "Florida Last 5 Tags:"
+        git tag --sort=-creatordate | head -5
+        cd ..
         
         # 3.1 删除会导致 rpc.vala 编译失败的 patch
         echo "Removing conflicting rpc patch..."
@@ -363,3 +383,25 @@ jobs:
         asset_path: '${{ github.workspace }}/build-android-x86_64/subprojects/frida-core/lib/gadget/frida-gadget.so.gz'
         asset_name: 'hluda-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-x86_64.so.gz'
         asset_content_type: application/octet-stream
+
+    - name: Debug - Check agent symbols
+      run: |
+        # 找到编译生成的 agent so
+        AGENT_PATH=$(find frida/build/src/frida-agent -name "libfrida-agent.so" | head -n 1)
+        echo "Found agent at: $AGENT_PATH"
+
+        # 查看动态符号表，看 main 是否存在且是 GLOBAL
+        echo "=== Dynamic Symbols (should have main as GLOBAL) ==="
+        nm -D "$AGENT_PATH" | grep -E 'main|frida_agent_main'
+
+        # 查看文件类型
+        file "$AGENT_PATH"
+
+    - name: Upload libfrida-agent.so for inspection
+      if: always()   # 即使编译失败/卡死，也尽量上传
+      uses: actions/upload-artifact@v4
+      with:
+        name: frida-agent-debug
+        path: |
+          frida/build/src/frida-agent/**/libfrida-agent.so
+        retention-days: 7
