@@ -166,11 +166,11 @@ jobs:
         git clone --recurse-submodules -b 17.13.0 https://github.com/frida/frida.git frida
 
         # 2. 克隆 Florida 并切换到 17.13.0 标签
-        echo "Cloning Florida and checking out 17.13.0..."
-        git clone https://github.com/Ylarod/Florida.git Florida
-        cd Florida
-        git checkout 17.13.0
-        cd ..
+        # echo "Cloning Florida and checking out 17.13.0..."
+        # git clone https://github.com/Ylarod/Florida.git Florida
+        # cd Florida
+        # git checkout 17.13.0
+        # cd ..
 
         # 2.2 检查 Frida 版本信息
         echo "===== Frida Version Info ====="
@@ -183,33 +183,33 @@ jobs:
         cd ..
 
         # 2.3 检查 Florida 版本信息
-        echo "===== Florida Version Info ====="
-        cd Florida
-        echo "Florida Branch/HEAD: $(git rev-parse --abbrev-ref HEAD)"
-        echo "Florida Exact Tag: $(git describe --tags --exact-match 2>/dev/null || echo 'NOT ON A TAG')"
-        echo "Florida Commit: $(git rev-parse HEAD)"
-        echo "Florida Last 5 Tags:"
-        git tag --sort=-creatordate | head -5
-        cd ..
+        # echo "===== Florida Version Info ====="
+        # cd Florida
+        # echo "Florida Branch/HEAD: $(git rev-parse --abbrev-ref HEAD)"
+        # echo "Florida Exact Tag: $(git describe --tags --exact-match 2>/dev/null || echo 'NOT ON A TAG')"
+        # echo "Florida Commit: $(git rev-parse HEAD)"
+        # echo "Florida Last 5 Tags:"
+        # git tag --sort=-creatordate | head -5
+        # cd ..
         
         # 3.1 删除会导致 rpc.vala 编译失败的 patch
         # echo "Removing conflicting rpc patch..."
         # rm -f Florida/patches/frida-core/0001-Florida-string_frida_rpc.patch
 
         # 3.2 应用补丁（此时 Florida/patches 一定是 17.13.0 专用）
-        echo "Applying Florida patches..."
-        cd frida
-        echo "Patching frida-core"
-        cd subprojects/frida-core
-        git apply --reject --whitespace=fix ../../../Florida/patches/frida-core/*.patch || true
-        cd ../..
+        # echo "Applying Florida patches..."
+        # cd frida
+        # echo "Patching frida-core"
+        # cd subprojects/frida-core
+        # git apply --reject --whitespace=fix ../../../Florida/patches/frida-core/*.patch || true
+        # cd ../..
 
-        echo "Patching frida-gum"
-        cd subprojects/frida-gum
-        git apply --reject --whitespace=fix ../../../Florida/patches/frida-gum/*.patch || true
-        cd ../..
+        # echo "Patching frida-gum"
+        # cd subprojects/frida-gum
+        # git apply --reject --whitespace=fix ../../../Florida/patches/frida-gum/*.patch || true
+        # cd ../..
         
-        cd ..
+        # cd ..
 
         # 4. 编译
         echo "Building..."
