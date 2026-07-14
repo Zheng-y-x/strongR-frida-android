@@ -211,6 +211,12 @@ jobs:
         
         # cd ..
 
+        #test
+        echo "Applying custom base_rpc_vala patch..."
+        cd frida
+        git apply --whitespace=fix ../patch/base_rpc_vala.patch
+        cd ..
+
         # 4. 编译
         echo "Building..."
         ARCHES="android-arm android-arm64 android-x86 android-x86_64"
