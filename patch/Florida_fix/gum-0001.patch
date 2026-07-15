@@ -1,0 +1,12 @@
+diff -Naur frida-gum/gum/gum.c frida-gum-fix/gum/gum.c
+--- a/gum/gum.c	2026-06-16 00:48:46.000000000 +0800
++++ b/gum/gum.c	2026-07-15 17:17:16.991414000 +0800
+@@ -302,7 +302,7 @@
+   g_log_set_default_handler (gum_on_log_message, NULL);
+   gum_do_init ();
+ 
+-  g_set_prgname ("frida");
++  g_set_prgname ("ggbond");
+ 
+ #if defined (HAVE_LINUX) && defined (HAVE_GLIBC)
+   gum_libdl_prevent_unload ();
