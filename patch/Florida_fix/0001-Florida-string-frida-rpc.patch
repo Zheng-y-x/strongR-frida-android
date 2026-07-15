@@ -8,10 +8,7 @@ Subject: [PATCH 1/9] Florida: string_frida_rpc
  1 file changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
-index 8990b70e..d5acfebd 100644
---- a/lib/base/rpc.vala
-+++ b/lib/base/rpc.vala
-@@ -22,21 +22,30 @@ namespace Frida {
+@@ -22,6 +22,15 @@
  			Object (peer: peer);
  		}
  
@@ -24,43 +21,35 @@ index 8990b70e..d5acfebd 100644
 +			}
 +		}
 +
-		/**
-		 * Calls a remote method and waits for its result.
-		 *
-		 * @param method the method name to invoke
-		 * @param args the JSON arguments
-		 * @param data binary data to accompany the call, if any
-		 * @return the method's JSON result
-		 */
-		public async Json.Node call (string method, Json.Node[] args, Bytes? data, Cancellable? cancellable) throws Error, IOError {
-			string request_id = Uuid.string_random ();
-
-			var request = new Json.Builder ();
-			request
-				.begin_array ()
+ 		/**
+ 		 * Calls a remote method and waits for its result.
+ 		 *
+@@ -36,7 +45,7 @@
+ 			var request = new Json.Builder ();
+ 			request
+ 				.begin_array ()
 -				.add_string_value ("frida:rpc")
 +				.add_string_value (getRpcStr(false))
-				.add_string_value (request_id)
-				.add_string_value ("call")
-				.add_string_value (method)
-@@ -98,7 +107,7 @@ namespace Frida {
-		}
-
-		public bool try_handle_message (string json) {
+ 				.add_string_value (request_id)
+ 				.add_string_value ("call")
+ 				.add_string_value (method)
+@@ -96,7 +105,7 @@
+ 		 * @return true if the message was an RPC message and was handled
+ 		 */
+ 		public bool try_handle_message (string json) {
 -			if (json.index_of ("\"frida:rpc\"") == -1)
 +			if (json.index_of (getRpcStr(true)) == -1)
-				return false;
-
-			var parser = new Json.Parser ();
-@@ -125,7 +134,7 @@ namespace Frida {
-				return false;
-
-			string? type = rpc_message.get_element (0).get_string ();
+ 				return false;
+ 
+ 			var parser = new Json.Parser ();
+@@ -125,7 +134,7 @@
+ 				return false;
+ 
+ 			string? type = rpc_message.get_element (0).get_string ();
 -			if (type == null || type != "frida:rpc")
 +			if (type == null || type != getRpcStr(false))
-				return false;
+ 				return false;
+ 
+ 			var request_id_value = rpc_message.get_element (1);
 
-			var request_id_value = rpc_message.get_element (1);
--- 
-2.47.1
 
