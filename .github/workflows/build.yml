@@ -267,6 +267,12 @@ jobs:
         cd ../..
         cd ..
 
+        #check patch
+        cd frida/subprojects/frida-core
+        echo "===== 2. 第 10-40 行（cat -A 显示不可见字符） ====="
+        sed -n '10,40p' lib/base/rpc.vala | cat -A
+        cd ../../..
+
         # 4. 编译
         echo "Building..."
         ARCHES="android-arm android-arm64 android-x86 android-x86_64"
