@@ -7,6 +7,4 @@ index abcdef1..1234567 100644
 +			return "PATCHED_17_13_0";
 +		}
 +
-		private Gee.HashMap<string, PendingResponse> pending_responses = new Gee.HashMap<string, PendingResponse> ();
-
-		
+ 		private Gee.HashMap<string, PendingResponse> pending_responses = new Gee.HashMap<string, PendingResponse> ();
