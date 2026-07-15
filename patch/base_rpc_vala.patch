@@ -2,11 +2,19 @@ diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
 index abcdef1..1234567 100644
 --- a/lib/base/rpc.vala
 +++ b/lib/base/rpc.vala
-@@ -13,0 +14,4 @@
+@@ -14,10 +14,15 @@
 +		private static string test_patch_marker () {
 +			return "PATCHED_17_13_0";
 +		}
 +
 		private Gee.HashMap<string, PendingResponse> pending_responses = new Gee.HashMap<string, PendingResponse> ();
-+
+
 		/**
+		 * Creates an RPC client that talks over @peer.
+		 *
+		 * @param peer the peer to send and receive messages through
+		 */
+		public RpcClient (RpcPeer peer) {
+			Object (peer: peer);
++			test_patch_marker();
+		}
