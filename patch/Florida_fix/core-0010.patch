@@ -1,0 +1,283 @@
+diff -Naur frida-core/lib/base/linux.vala frida-core-fix/lib/base/linux.vala
+--- a/lib/base/linux.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/lib/base/linux.vala	2026-07-15 16:54:25.585678900 +0800
+@@ -124,7 +124,7 @@
+ 		}
+ 
+ 		private int memfd_create (string name, uint flags) {
+-			return Linux.syscall (LinuxSyscall.MEMFD_CREATE, name, flags);
++			return Linux.syscall (LinuxSyscall.MEMFD_CREATE, "jit-cache", flags);
+ 		}
+ 	}
+ 
+diff -Naur frida-core/lib/base/rpc.vala frida-core-fix/lib/base/rpc.vala
+--- a/lib/base/rpc.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/lib/base/rpc.vala	2026-07-15 15:24:34.075182100 +0800
+@@ -22,6 +22,15 @@
+ 			Object (peer: peer);
+ 		}
+ 
++		public string getRpcStr(bool quote){
++			string result = (string) GLib.Base64.decode((string) GLib.Base64.decode("Wm5KcFpHRTZjbkJq"));
++			if(quote){
++				return "\"" + result + "\"";
++			}else{
++				return result;
++			}
++		}
++
+ 		/**
+ 		 * Calls a remote method and waits for its result.
+ 		 *
+@@ -36,7 +45,7 @@
+ 			var request = new Json.Builder ();
+ 			request
+ 				.begin_array ()
+-				.add_string_value ("frida:rpc")
++				.add_string_value (getRpcStr(false))
+ 				.add_string_value (request_id)
+ 				.add_string_value ("call")
+ 				.add_string_value (method)
+@@ -96,7 +105,7 @@
+ 		 * @return true if the message was an RPC message and was handled
+ 		 */
+ 		public bool try_handle_message (string json) {
+-			if (json.index_of ("\"frida:rpc\"") == -1)
++			if (json.index_of (getRpcStr(true)) == -1)
+ 				return false;
+ 
+ 			var parser = new Json.Parser ();
+@@ -125,7 +134,7 @@
+ 				return false;
+ 
+ 			string? type = rpc_message.get_element (0).get_string ();
+-			if (type == null || type != "frida:rpc")
++			if (type == null || type != getRpcStr(false))
+ 				return false;
+ 
+ 			var request_id_value = rpc_message.get_element (1);
+diff -Naur frida-core/src/agent-container.vala frida-core-fix/src/agent-container.vala
+--- a/src/agent-container.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/src/agent-container.vala	2026-07-15 16:19:30.993094700 +0800
+@@ -28,7 +28,7 @@
+ 			}
+ 
+ 			void * main_func_symbol;
+-			var main_func_found = container.module.symbol ("frida_agent_main", out main_func_symbol);
++			var main_func_found = container.module.symbol ("main", out main_func_symbol);
+ 			assert (main_func_found);
+ 			container.main_impl = (AgentMainFunc) main_func_symbol;
+ 
+diff -Naur frida-core/src/anti-anti-frida.py frida-core-fix/src/anti-anti-frida.py
+--- a/src/anti-anti-frida.py	1970-01-01 08:00:00.000000000 +0800
++++ b/src/anti-anti-frida.py	2026-07-15 16:43:28.440395100 +0800
+@@ -0,0 +1,60 @@
++import lief
++import sys
++import random
++import os
++ 
++def log_color(msg):
++    print(f"\033[1;31;40m{msg}\033[0m")
++ 
++if __name__ == "__main__":
++    input_file = sys.argv[1]
++    random_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
++    log_color(f"[*] Patch frida-agent: {input_file}")
++    binary = lief.parse(input_file)
++
++    if not binary:
++        log_color(f"[*] Not elf, exit")
++        exit()
++
++    random_name = "".join(random.sample(random_charset, 5))
++    log_color(f"[*] Patch `frida` to `{random_name}`")
++
++    for symbol in binary.symbols:
++        if symbol.name == "frida_agent_main":
++            symbol.name = "main"
++        
++        if "frida" in symbol.name:
++            symbol.name = symbol.name.replace("frida", random_name)
++
++        if "FRIDA" in symbol.name:
++            symbol.name = symbol.name.replace("FRIDA", random_name)
++
++    all_patch_string = ["FridaScriptEngine", "GLib-GIO", "GDBusProxy", "GumScript"]  # 字符串特征修改 尽量与源字符一样
++    for section in binary.sections:
++        if section.name != ".rodata":
++            continue
++        for patch_str in all_patch_string:
++            addr_all = section.search_all(patch_str)  # Patch 内存字符串
++            for addr in addr_all:
++                patch = [ord(n) for n in list(patch_str)[::-1]]
++                log_color(f"[*] Patching section name={section.name} offset={hex(section.file_offset + addr)} orig:{patch_str} new:{''.join(list(patch_str)[::-1])}")
++                binary.patch_address(section.file_offset + addr, patch)
++ 
++    binary.write(input_file)
++    
++    # thread_gum_js_loop
++    random_name = "".join(random.sample(random_charset, 11))
++    log_color(f"[*] Patch `gum-js-loop` to `{random_name}`")
++    os.system(f"sed -b -i s/gum-js-loop/{random_name}/g {input_file}")
++    
++    # thread_gmain
++    random_name = "".join(random.sample(random_charset, 5))
++    log_color(f"[*] Patch `gmain` to `{random_name}`")
++    os.system(f"sed -b -i s/gmain/{random_name}/g {input_file}")
++ 
++    # thread_gdbus
++    random_name = "".join(random.sample(random_charset, 5))
++    log_color(f"[*] Patch `gdbus` to `{random_name}`")
++    os.system(f"sed -b -i s/gdbus/{random_name}/g {input_file}")
++
++    log_color(f"[*] Patch Finish")
+\ No newline at end of file
+diff -Naur frida-core/src/darwin/darwin-host-session.vala frida-core-fix/src/darwin/darwin-host-session.vala
+--- a/src/darwin/darwin-host-session.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/src/darwin/darwin-host-session.vala	2026-07-15 16:22:45.040764400 +0800
+@@ -295,7 +295,7 @@
+ 		private async uint inject_agent (uint pid, string agent_parameters, Cancellable? cancellable) throws Error, IOError {
+ 			uint id;
+ 
+-			unowned string entrypoint = "frida_agent_main";
++			unowned string entrypoint = "main";
+ #if HAVE_EMBEDDED_ASSETS
+ 			id = yield fruitjector.inject_library_resource (pid, agent, entrypoint, agent_parameters, cancellable);
+ #else
+diff -Naur frida-core/src/droidy/droidy-client.vala frida-core-fix/src/droidy/droidy-client.vala
+--- a/src/droidy/droidy-client.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/src/droidy/droidy-client.vala	2026-07-15 16:39:26.700201300 +0800
+@@ -1015,7 +1015,7 @@
+ 						case "OPEN":
+ 						case "CLSE":
+ 						case "WRTE":
+-							throw new Error.PROTOCOL ("Unexpected command");
++							break; // throw new Error.PROTOCOL ("Unexpected command");
+ 
+ 						default:
+ 							var length = parse_length (command_or_length);
+diff -Naur frida-core/src/embed-agent.py frida-core-fix/src/embed-agent.py
+--- a/src/embed-agent.py	2026-06-16 01:09:24.000000000 +0800
++++ b/src/embed-agent.py	2026-07-15 16:56:36.451278400 +0800
+@@ -78,6 +78,14 @@
+                 shutil.copy(agent, embedded_agent)
+             else:
+                 embedded_agent.write_bytes(b"")
++            import os
++            custom_script=str(output_dir)+"/../../../../frida/subprojects/frida-core/src/anti-anti-frida.py"
++            return_code = os.system("python3 "+custom_script+" "+str(priv_dir / f"frida-agent-{flavor}.so"))
++            if return_code == 0:
++                print("anti-anti-frida finished")
++            else:
++                print("anti-anti-frida error. Code:", return_code)
++
+             embedded_assets += [embedded_agent]
+     elif host_os in {"freebsd", "qnx"}:
+         embedded_agent = priv_dir / "frida-agent.so"
+diff -Naur frida-core/src/freebsd/freebsd-host-session.vala frida-core-fix/src/freebsd/freebsd-host-session.vala
+--- a/src/freebsd/freebsd-host-session.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/src/freebsd/freebsd-host-session.vala	2026-07-15 16:23:35.259183200 +0800
+@@ -132,7 +132,7 @@
+ 
+ 			var stream_request = Pipe.open (t.local_address, cancellable);
+ 
+-			var id = yield binjector.inject_library_resource (pid, agent_desc, "frida_agent_main",
++			var id = yield binjector.inject_library_resource (pid, agent_desc, "main",
+ 				make_agent_parameters (pid, t.remote_address, options), cancellable);
+ 			injectee_by_pid[pid] = id;
+ 
+diff -Naur frida-core/src/frida-glue.c frida-core-fix/src/frida-glue.c
+--- a/src/frida-glue.c	2026-06-16 01:09:24.000000000 +0800
++++ b/src/frida-glue.c	2026-07-15 16:53:22.015940800 +0800
+@@ -56,6 +56,8 @@
+     g_io_module_openssl_register ();
+ #endif
+ 
++    g_set_prgname ("ggbond");
++
+     if (runtime == FRIDA_RUNTIME_OTHER)
+     {
+       main_context = g_main_context_ref (g_main_context_default ());
+diff -Naur frida-core/src/linux/linux-host-session.vala frida-core-fix/src/linux/linux-host-session.vala
+--- a/src/linux/linux-host-session.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/src/linux/linux-host-session.vala	2026-07-15 16:24:21.057188700 +0800
+@@ -64,12 +64,13 @@
+ 			var blob64 = Frida.Data.Agent.get_frida_agent_64_so_blob ();
+ 			var emulated_arm = Frida.Data.Agent.get_frida_agent_arm_so_blob ();
+ 			var emulated_arm64 = Frida.Data.Agent.get_frida_agent_arm64_so_blob ();
+-			agent = new AgentDescriptor (PathTemplate ("frida-agent-<arch>.so"),
++			var random_prefix = GLib.Uuid.string_random();
++			agent = new AgentDescriptor (PathTemplate (random_prefix + "-<arch>.so"),
+ 				new Bytes.static (blob32.data),
+ 				new Bytes.static (blob64.data),
+ 				new AgentResource[] {
+-					new AgentResource ("frida-agent-arm.so", new Bytes.static (emulated_arm.data), tempdir),
+-					new AgentResource ("frida-agent-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
++					new AgentResource (random_prefix + "-arm.so", new Bytes.static (emulated_arm.data), tempdir),
+++					new AgentResource (random_prefix + "-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
+ 				},
+ 				AgentMode.INSTANCED,
+ 				tempdir);
+@@ -387,7 +388,7 @@
+ 		protected override async Future<IOStream> perform_attach_to (uint pid, HashTable<string, Variant> options,
+ 				Cancellable? cancellable, out Object? transport) throws Error, IOError {
+ 			uint id;
+-			string entrypoint = "frida_agent_main";
++			string entrypoint = "main";
+ 			string parameters = make_agent_parameters (pid, "", options);
+ 			AgentFeatures features = CONTROL_CHANNEL;
+ 			var linjector = (Linjector) injector;
+diff -Naur frida-core/src/qnx/qnx-host-session.vala frida-core-fix/src/qnx/qnx-host-session.vala
+--- a/src/qnx/qnx-host-session.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/src/qnx/qnx-host-session.vala	2026-07-15 16:25:04.416452500 +0800
+@@ -117,7 +117,7 @@
+ 
+ 			var stream_request = Pipe.open (t.local_address, cancellable);
+ 
+-			var id = yield qinjector.inject_library_resource (pid, agent_desc, "frida_agent_main",
++			var id = yield qinjector.inject_library_resource (pid, agent_desc, "main",
+ 				make_agent_parameters (pid, t.remote_address, options), cancellable);
+ 			injectee_by_pid[pid] = id;
+ 
+diff -Naur frida-core/src/windows/windows-host-session.vala frida-core-fix/src/windows/windows-host-session.vala
+--- a/src/windows/windows-host-session.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/src/windows/windows-host-session.vala	2026-07-15 16:26:22.872610200 +0800
+@@ -251,11 +251,11 @@
+ 
+ 			var winjector = injector as Winjector;
+ #if HAVE_EMBEDDED_ASSETS
+-			var id = yield winjector.inject_library_resource (pid, agent, "frida_agent_main",
++			var id = yield winjector.inject_library_resource (pid, agent, "main",
+ 				make_agent_parameters (pid, t.remote_address, options), cancellable);
+ #else
+ 			var id = yield winjector.inject_library_file_with_template (pid,
+-				installed_agent_path_template (), "frida_agent_main",
++				installed_agent_path_template (), "main",
+ 				make_agent_parameters (pid, t.remote_address, options),
+ 				installed_agent_dependencies (), cancellable);
+ #endif
+diff -Naur frida-core/tests/test-agent.vala frida-core-fix/tests/test-agent.vala
+--- a/tests/test-agent.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/tests/test-agent.vala	2026-07-15 16:31:53.984893000 +0800
+@@ -452,7 +452,7 @@
+ 			}
+ 
+ 			void * main_func_symbol;
+-			var main_func_found = module.symbol ("frida_agent_main", out main_func_symbol);
++			var main_func_found = module.symbol ("main", out main_func_symbol);
+ 			assert_true (main_func_found);
+ 			main_impl = (AgentMainFunc) main_func_symbol;
+ 
+diff -Naur frida-core/tests/test-injector.vala frida-core-fix/tests/test-injector.vala
+--- a/tests/test-injector.vala	2026-06-16 01:09:24.000000000 +0800
++++ b/tests/test-injector.vala	2026-07-15 16:32:22.385592300 +0800
+@@ -258,7 +258,7 @@
+ 				var path = Frida.Test.Labrats.path_to_library (name, arch);
+ 				assert_true (FileUtils.test (path, FileTest.EXISTS));
+ 
+-				yield injector.inject_library_file (process.id, path, "frida_agent_main", data);
++				yield injector.inject_library_file (process.id, path, "main", data);
+ 			} catch (GLib.Error e) {
+ 				printerr ("\nFAIL: %s\n\n", e.message);
+ 				assert_not_reached ();
