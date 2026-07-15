@@ -32,35 +32,35 @@ index 8990b70e..d5acfebd 100644
 		 * @param data binary data to accompany the call, if any
 		 * @return the method's JSON result
 		 */
- 		public async Json.Node call (string method, Json.Node[] args, Bytes? data, Cancellable? cancellable) throws Error, IOError {
- 			string request_id = Uuid.string_random ();
- 
- 			var request = new Json.Builder ();
- 			request
- 				.begin_array ()
+		public async Json.Node call (string method, Json.Node[] args, Bytes? data, Cancellable? cancellable) throws Error, IOError {
+			string request_id = Uuid.string_random ();
+
+			var request = new Json.Builder ();
+			request
+				.begin_array ()
 -				.add_string_value ("frida:rpc")
 +				.add_string_value (getRpcStr(false))
- 				.add_string_value (request_id)
- 				.add_string_value ("call")
- 				.add_string_value (method)
+				.add_string_value (request_id)
+				.add_string_value ("call")
+				.add_string_value (method)
 @@ -98,7 +107,7 @@ namespace Frida {
- 		}
- 
- 		public bool try_handle_message (string json) {
+		}
+
+		public bool try_handle_message (string json) {
 -			if (json.index_of ("\"frida:rpc\"") == -1)
 +			if (json.index_of (getRpcStr(true)) == -1)
- 				return false;
- 
- 			var parser = new Json.Parser ();
+				return false;
+
+			var parser = new Json.Parser ();
 @@ -125,7 +134,7 @@ namespace Frida {
- 				return false;
- 
- 			string? type = rpc_message.get_element (0).get_string ();
+				return false;
+
+			string? type = rpc_message.get_element (0).get_string ();
 -			if (type == null || type != "frida:rpc")
 +			if (type == null || type != getRpcStr(false))
- 				return false;
- 
- 			var request_id_value = rpc_message.get_element (1);
+				return false;
+
+			var request_id_value = rpc_message.get_element (1);
 -- 
 2.47.1
 
