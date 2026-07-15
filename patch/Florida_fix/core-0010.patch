@@ -215,7 +215,7 @@ diff -Naur frida-core/src/linux/linux-host-session.vala frida-core-fix/src/linux
 -					new AgentResource ("frida-agent-arm.so", new Bytes.static (emulated_arm.data), tempdir),
 -					new AgentResource ("frida-agent-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
 +					new AgentResource (random_prefix + "-arm.so", new Bytes.static (emulated_arm.data), tempdir),
-++					new AgentResource (random_prefix + "-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
++					new AgentResource (random_prefix + "-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
  				},
  				AgentMode.INSTANCED,
  				tempdir);
