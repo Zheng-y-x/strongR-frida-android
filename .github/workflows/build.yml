@@ -138,6 +138,49 @@ jobs:
         sudo gem install fpm -v 1.11.0 --no-document
         python3 -m pip install lief graphlib
 
+    - name: Ultimate diagnosis
+      run: |
+        cd frida/subprojects/frida-core
+
+        echo "===== 1. 文件类型（是否 CRLF） ====="
+        file lib/base/rpc.vala
+
+        echo ""
+        echo "===== 2. 第 10-20 行（cat -A 显示不可见字符） ====="
+        sed -n '10,20p' lib/base/rpc.vala | cat -A
+
+        echo ""
+        echo "===== 3. 第 13 行 hexdump ====="
+        sed -n '13p' lib/base/rpc.vala | hexdump -C
+
+        echo ""
+        echo "===== 4. 第 14 行 hexdump ====="
+        sed -n '14p' lib/base/rpc.vala | hexdump -C
+
+        echo ""
+        echo "===== 5. patch 文件信息 ====="
+        file ../../../patch/base_rpc_vala.patch
+
+        echo ""
+        echo "===== 6. patch 第 1-15 行（cat -A） ====="
+        head -n 15 ../../../patch/base_rpc_vala.patch | cat -A
+
+        echo ""
+        echo "===== 7. patch 第 13 行 hexdump ====="
+        sed -n '13p' ../../../patch/base_rpc_vala.patch | hexdump -C
+
+        echo ""
+        echo "===== 8. git status ====="
+        git status
+
+        echo ""
+        echo "===== 9. git diff（看 Florida 是否改了 rpc.vala） ====="
+        git diff lib/base/rpc.vala | head -50
+
+        echo ""
+        echo "===== 10. HEAD commit ====="
+        git log --oneline -1
+
     - name: build frida for Android
       shell: bash
       run: |
@@ -215,8 +258,8 @@ jobs:
         echo "Applying custom base_rpc_vala patch..."
         cd frida
         cd subprojects/frida-core
-        # git apply --whitespace=fix ../../../patch/base_rpc_vala.patch
-        git apply --whitespace=fix ../../../patch/Florida_fix/0001-Florida-string-frida-rpc.patch
+        git apply --whitespace=fix ../../../patch/base_rpc_vala.patch
+        # git apply --whitespace=fix ../../../patch/Florida_fix/0001-Florida-string-frida-rpc.patch
         cd ../..
         cd ..
 
