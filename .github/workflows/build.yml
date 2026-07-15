@@ -263,15 +263,20 @@ jobs:
         cd frida
         cd subprojects/frida-core
         # git apply --whitespace=fix ../../../patch/base_rpc_vala.patch
-        git apply --whitespace=fix ../../../patch/Florida_fix/0001-Florida-string-frida-rpc.patch
+        git apply --whitespace=fix ../../../patch/Florida_fix/core-0010.patch
         cd ../..
+        
+        cd subprojects/frida-gum
+        git apply --whitespace=fix ../../../patch/Florida_fix/gum-0001.patch
+        cd ../..
+        
         cd ..
 
         #check patch
-        cd frida/subprojects/frida-core
-        echo "===== 2. 第 10-40 行（cat -A 显示不可见字符） ====="
-        sed -n '10,40p' lib/base/rpc.vala | cat -A
-        cd ../../..
+        # cd frida/subprojects/frida-core
+        # echo "===== 2. 第 10-40 行（cat -A 显示不可见字符） ====="
+        # sed -n '10,40p' lib/base/rpc.vala | cat -A
+        # cd ../../..
 
         # 4. 编译
         echo "Building..."
