@@ -215,7 +215,8 @@ jobs:
         echo "Applying custom base_rpc_vala patch..."
         cd frida
         cd subprojects/frida-core
-        git apply --whitespace=fix ../../../patch/base_rpc_vala.patch
+        # git apply --whitespace=fix ../../../patch/base_rpc_vala.patch
+        git apply --whitespace=fix ../../../patch/Florida_fix/0001-Florida-string-frida-rpc.patch
         cd ../..
         cd ..
 
