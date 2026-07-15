@@ -2,13 +2,11 @@ diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
 index abcdef1..1234567 100644
 --- a/lib/base/rpc.vala
 +++ b/lib/base/rpc.vala
-@@ -14,6 +14,10 @@ namespace Frida {
-		private Gee.HashMap<string, PendingResponse> pending_responses = new Gee.HashMap<string, PendingResponse> ();
-
+@@ -13,0 +14,5 @@
 +		private static string test_patch_marker () {
 +			return "PATCHED_17_13_0";
 +		}
 +
-		/**
-		 * Creates an RPC client that talks over @peer.
-		 *
+		private Gee.HashMap<string, PendingResponse> pending_responses = new Gee.HashMap<string, PendingResponse> ();
+
+		
